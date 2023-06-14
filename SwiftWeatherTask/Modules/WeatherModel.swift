@@ -9,7 +9,7 @@ import Foundation
 struct WeatherData: Decodable {
     let location: CurrentLocation
     let current: CurrentDegree
-    let forecast: Forecast
+    var forecast: Forecast
 }
 
 struct CurrentLocation: Decodable {
@@ -22,13 +22,14 @@ struct CurrentDegree: Decodable {
     
 }
 struct Forecast: Decodable {
-    let forecastday: [Forecastday]
+    var forecastday: [Forecastday]
 }
 
 // MARK: - Forecastday
-struct Forecastday: Decodable {
+struct Forecastday: Decodable{
+//    var id = UUID()
     let day: Day
- 
+    let date:String
 }
 struct Day: Decodable {
     let maxtemp_c:Double

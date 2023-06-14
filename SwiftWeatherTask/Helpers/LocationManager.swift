@@ -9,12 +9,13 @@ import CoreLocation
 import Combine
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-
+    
     private let locationManager = CLLocationManager()
     @Published var locationStatus: CLAuthorizationStatus?
     @Published var lastLocation: CLLocation?
     @Published var locationPublisher: CurrentValueSubject<CLLocation?, Never> = CurrentValueSubject(nil)
-
+    @Published var requestPublisher: CurrentValueSubject<Bool?, Never> = CurrentValueSubject(nil)
+    
     override init() {
         super.init()
         locationManager.delegate = self
@@ -23,15 +24,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
         
     }
-
-   
+    
+    
     
     var statusCheck: Bool {
-        guard let status = locationStatus else {
-            return false
-        }
-        
-        switch status {
+        switch locationStatus {
         case .notDetermined: return false
         case .authorizedWhenInUse: return true
         case .authorizedAlways: return true
@@ -40,36 +37,46 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         default: return false
         }
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         locationStatus = status
-//        print(#function, statusString)
+        switch locationStatus {
+        case .notDetermined: requestPublisher.send(false)
+        case .authorizedWhenInUse:      requestPublisher.send(true)
+        case .authorizedAlways:      requestPublisher.send(true)
+        case .restricted:      requestPublisher.send(false)
+        case .denied:       requestPublisher.send(false)
+        @unknown default:   return
+        }
+        
     }
     func location() -> AnyPublisher<CLLocation?, Never> {
-       return locationPublisher.eraseToAnyPublisher()
+        return locationPublisher.eraseToAnyPublisher()
     }
-    
+    func status() -> AnyPublisher<Bool?, Never> {
+        return requestPublisher.eraseToAnyPublisher()
+    }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-       guard let newLocation = locations.last else { return }
-            locationManager.stopUpdatingLocation()
+        guard let newLocation = locations.last else { return }
+        locationManager.stopUpdatingLocation()
         if shouldUpdateLocation(to: newLocation) {
-           locationPublisher.send(newLocation)
+            locationPublisher.send(newLocation)
         }
-
-      
-      
+        
+        
+        
     }
     private func shouldUpdateLocation(to location: CLLocation) -> Bool {
-       guard let lastKnownLocation = locationPublisher.value else { return true }
-       let distanceInMeters = Measurement(value: lastKnownLocation.distance(from: location), unit: UnitLength.meters)
-       let distanceInMiles = distanceInMeters.converted(to: .miles)
-       if distanceInMiles.value > 2 { return true }
-       return false
+        guard let lastKnownLocation = locationPublisher.value else { return true }
+        let distanceInMeters = Measurement(value: lastKnownLocation.distance(from: location), unit: UnitLength.meters)
+        let distanceInMiles = distanceInMeters.converted(to: .miles)
+        if distanceInMiles.value > 2 { return true }
+        return false
     }
-//    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-//        guard let location = locations.last else { return }
-//        lastLocation = location
-//        locationManager.stopUpdatingLocation()
-////        print(#function, location)
-//    }
+    //    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    //        guard let location = locations.last else { return }
+    //        lastLocation = location
+    //        locationManager.stopUpdatingLocation()
+    ////        print(#function, location)
+    //    }
 }

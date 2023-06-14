@@ -18,5 +18,9 @@ class MainViewClient: APIClient {
         
         performRequest(route: APIRouter.fetchWeather(nameOrZip: nameOrZip))
     }
+    class func getSearchResult(searchTxt:String) -> AnyPublisher<[LocationsData], AFError> {
+        
+        performRequest(route: APIRouter.autoComplete(searchTxt: searchTxt))
+    }
 
 }

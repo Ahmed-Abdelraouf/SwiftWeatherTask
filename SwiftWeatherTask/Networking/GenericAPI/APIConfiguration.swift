@@ -15,6 +15,7 @@ protocol APIConfiguration: URLRequestConvertible {
     var method: HTTPMethod { get }
     var path: String { get }
     var parameters: Parameters? { get }
+    var queryItems: [URLQueryItem]? { get }
     var hasLoading: Bool { get }
     var baseURL: String {get}
 }
@@ -45,7 +46,7 @@ extension APIConfiguration {
         }
 //        var urlComponent = URLComponents(string: K.apiBaseURL + path)
         var urlComponent = URLComponents(string: baseURL + path)
-
+        urlComponent?.queryItems = queryItems
 //        if method == .get  || method == .delete  {
 //            print("method is get here ")
 //            urlComponent?.queryItems = [URLQueryItem]()

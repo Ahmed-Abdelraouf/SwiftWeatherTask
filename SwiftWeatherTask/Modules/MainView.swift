@@ -17,16 +17,24 @@ struct MainView: View {
                 .aspectRatio(contentMode: .fill)
                 .edgesIgnoringSafeArea(.all)
                 VStack(alignment: .trailing){
-            navBarView()
+                    navBarView().padding(.bottom,42)
             dayInfoView()
             weathersOfWeekView()
             Spacer()
         }.padding(.horizontal)
                     .searchable(text: $mainVm.searchText)
             }
-
+            .onChange(of: mainVm.searchText, perform: { newValue in
+                mainVm.fetchLocations()
+            })
             .alert(mainVm.errorMessage , isPresented: $mainVm.isError) {
-                Button(NSLocalizedString("close", comment: "")) {}
+                Button(NSLocalizedString("Close", comment: "")) {}
+                Button {
+                    UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                } label: {
+                    Text("Go to Setting")
+                }
+
             }
         }
     }
@@ -47,34 +55,54 @@ struct ContentView_Previews: PreviewProvider {
 extension MainView {
     
     private func navBarView() -> some View{
-        HStack{
-            Image(systemName: "location.circle.fill")
-                .resizable()
-                .frame(width: 30,height: 30)
-                .foregroundColor(.textFgColor)
-                .onTapGesture {
-                    mainVm.fetchWeatherByLocation()
-                }
-           
-            TextField("Search", text: $mainVm.searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(height: 30)
-                .onSubmit {
-                    mainVm.fetchWeather()
-                    mainVm.searchText = ""
-                }
-             
-            Image(systemName: "magnifyingglass")
-                .resizable()
-                .frame(width: 30,height: 30)
-                .foregroundColor(.textFgColor)
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    mainVm.fetchWeather()
-                    mainVm.searchText = ""
-                }
+        VStack{
+            HStack{
+                Image(systemName: "location.circle.fill")
+                    .resizable()
+                    .frame(width: 30,height: 30)
+                    .foregroundColor(.textFgColor)
+                    .onTapGesture {
+                        mainVm.fetchWeatherByLocation()
+                    }
+                
+                TextField("Search", text: $mainVm.searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(height: 30)
+                    .onSubmit {
+                        mainVm.fetchWeather()
+                        mainVm.searchText = ""
+                    }
+                
+                Image(systemName: "magnifyingglass")
+                    .resizable()
+                    .frame(width: 30,height: 30)
+                    .foregroundColor(.textFgColor)
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        mainVm.fetchWeather()
+                        mainVm.searchText = ""
+                    }
+            }
+            if mainVm.isDropDownView {
+                VStack(spacing: 16){
+                    ForEach(mainVm.locations ?? []) {
+                        locaion in
+                        Text(locaion.name)
+                            .onTapGesture {
+                                mainVm.searchText = locaion.name
+                                mainVm.fetchWeather()
+                                mainVm.searchText = ""
+                                mainVm.isDropDownView = false
+                            }
+                    }
+                }.frame(maxWidth: .infinity,alignment: .leading)
+                    .padding(.horizontal)
+                .background(.white)
+                .cornerRadius(15)
+                    .padding()
+                
+            }
         }.padding(.bottom)
-
     }
     private func dayInfoView() -> some View{
         VStack{
@@ -113,25 +141,32 @@ extension MainView {
     }
     private func weathersOfWeekView() -> some View{
         HStack(spacing: 20) {
-            WeatherDayView(dayOfWeek: "TUE",
-                           imageName: "cloud.sun.fill",
-                           temperature: 74)
             
-            WeatherDayView(dayOfWeek: "WED",
-                           imageName: "sun.max.fill",
-                           temperature: 88)
-            
-            WeatherDayView(dayOfWeek: "THU",
-                           imageName: "wind.snow",
-                           temperature: 55)
-            
-            WeatherDayView(dayOfWeek: "FRI",
-                           imageName: "sunset.fill",
-                           temperature: 60)
-            
-            WeatherDayView(dayOfWeek: "SAT",
-                           imageName: "snow",
-                           temperature: 25)
+            ForEach(mainVm.weather?.forecast.forecastday ?? [], id: \.date) {
+                row in
+                WeatherDayView(dayOfWeek: mainVm.printDayName(dayOfWeather: row.date),
+                               imageName: row.day.condition.icon,
+                               temperature: Int(row.day.maxtemp_c))
+            }
+//            WeatherDayView(dayOfWeek: "TUE",
+//                           imageName: "cloud.sun.fill",
+//                           temperature: 74)
+//
+//            WeatherDayView(dayOfWeek: "WED",
+//                           imageName: "sun.max.fill",
+//                           temperature: 88)
+//
+//            WeatherDayView(dayOfWeek: "THU",
+//                           imageName: "wind.snow",
+//                           temperature: 55)
+//
+//            WeatherDayView(dayOfWeek: "FRI",
+//                           imageName: "sunset.fill",
+//                           temperature: 60)
+//
+//            WeatherDayView(dayOfWeek: "SAT",
+//                           imageName: "snow",
+//                           temperature: 25)
         }.frame(maxWidth: .infinity,alignment: .center)
                     .padding(.vertical)
 

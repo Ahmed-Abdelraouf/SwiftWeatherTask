@@ -14,10 +14,10 @@ struct K {
     
  //  static var baseURL = "http://154.26.138.231/api/"
 //https://api.weatherapi.com/v1/forecast.json?key=bd0deafc57a8421082d72559231106&q=giza&days=7
-    static var baseURL = "https://api.weatherapi.com/v1/forecast.json?key=bd0deafc57a8421082d72559231106"
+    static var baseURL = "https://api.weatherapi.com/v1/"
     //    static var baseURL = "http://apistest.haatcard.net/api/"
     static func getFullImagePath(imgUrl:String)-> String{
-        
+       
         return "https:\(imgUrl)"
 
     }
