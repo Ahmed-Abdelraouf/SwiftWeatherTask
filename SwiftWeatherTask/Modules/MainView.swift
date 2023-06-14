@@ -55,7 +55,7 @@ struct ContentView_Previews: PreviewProvider {
 extension MainView {
     
     private func navBarView() -> some View{
-        VStack{
+        VStack(spacing: 0){
             HStack{
                 Image(systemName: "location.circle.fill")
                     .resizable()
@@ -84,7 +84,7 @@ extension MainView {
                     }
             }
             if mainVm.isDropDownView {
-                VStack(spacing: 16){
+                VStack(spacing: 24){
                     ForEach(mainVm.locations ?? []) {
                         locaion in
                         Text(locaion.name)
